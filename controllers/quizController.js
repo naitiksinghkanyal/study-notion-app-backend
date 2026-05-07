@@ -224,14 +224,20 @@ Rules:
     // ── Detect which AI provider to use ──────────────────────────────────────
     let rawText = '';
 
-    const hasGemini    = process.env.GEMINI_API_KEY    && process.env.GEMINI_API_KEY    !== 'your-gemini-key';
-    const hasAnthropic = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'sk-ant-your-key-here';
-    const hasOpenAI    = process.env.OPENAI_API_KEY    && process.env.OPENAI_API_KEY    !== 'your-openai-key';
+    // Trim whitespace to avoid copy-paste issues
+    const geminiKey    = (process.env.GEMINI_API_KEY    || '').trim();
+    const anthropicKey = (process.env.ANTHROPIC_API_KEY || '').trim();
+    const openaiKey    = (process.env.OPENAI_API_KEY    || '').trim();
+
+    const FAKE = ['your-gemini-key', 'your-gemini-key-here', 'your-key', ''];
+    const hasGemini    = geminiKey    && !FAKE.includes(geminiKey)    && geminiKey.startsWith('AIza');
+    const hasAnthropic = anthropicKey && !anthropicKey.includes('your-key') && anthropicKey.startsWith('sk-ant');
+    const hasOpenAI    = openaiKey    && !openaiKey.includes('your-') && openaiKey.length > 10;
 
     if (hasGemini) {
       // ── Google Gemini ───────────────────────────────────────────────────
       const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-      const url   = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+      const url   = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
 
       const response = await fetch(url, {
         method:  'POST',
@@ -248,7 +254,8 @@ Rules:
       if (!response.ok) {
         const err = await response.text();
         console.error('Gemini API error:', err);
-        return next(new AppError('Gemini API error. Check your GEMINI_API_KEY.', 502));
+        console.error('Gemini error:', response.status, errBody);
+        return next(new AppError(`Gemini API error (${response.status}). Key starts with: ${geminiKey.slice(0,8)}...`, 502));
       }
 
       const data = await response.json();

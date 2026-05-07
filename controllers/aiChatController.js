@@ -25,11 +25,11 @@ try {
 
 // ── Call Gemini API ───────────────────────────────────────────────────────────
 const callGemini = async (messages) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
 
-  if (!apiKey || apiKey === 'your-gemini-key-here' || apiKey.trim() === '') {
+  if (!apiKey || apiKey.length < 10 || !apiKey.startsWith('AIza')) {
     throw new AppError(
-      'AI tutor is not configured. Please add GEMINI_API_KEY to your environment variables.',
+      'AI tutor is not configured. Add a valid GEMINI_API_KEY to your Render environment variables. Keys start with "AIza".',
       503
     );
   }
@@ -120,11 +120,11 @@ exports.askQuestion = [
   async (req, res, next) => {
     try {
       // 1. Validate API key early
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey || apiKey === 'your-gemini-key-here' || apiKey.trim() === '') {
+      const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+      if (!apiKey || apiKey.length < 10 || !apiKey.startsWith('AIza')) {
         return res.status(503).json({
           success: false,
-          message: 'AI tutor is not configured. Add GEMINI_API_KEY to your Render environment variables.',
+          message: 'AI tutor is not configured. Add a valid GEMINI_API_KEY (starts with "AIza") to your Render environment variables.',
         });
       }
 

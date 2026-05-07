@@ -17,9 +17,9 @@ exports.generateRoadmap = async (req, res, next) => {
     const { goal, currentLevel, timeframe } = req.body;
     if (!goal?.trim()) return next(new AppError('Goal is required.', 400));
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'your-gemini-key-here') {
-      return next(new AppError('AI service not configured. Add GEMINI_API_KEY to .env', 503));
+    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    if (!apiKey || apiKey.length < 10 || apiKey.includes('your-gemini')) {
+      return next(new AppError('AI service not configured. Add GEMINI_API_KEY to Render environment variables.', 503));
     }
 
     // ── Prompt engineering for structured consistent output ──────────────────
